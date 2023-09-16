@@ -1,96 +1,602 @@
-# Obsidian Sample Plugin
+# Open Source Alternative for Building End-to-End Vector Search Applications without OpenAI & Pinecone
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+# Table of Contents
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+- [Overview](#overview)
+- [Quickstart](#quickstart)
+- [Usage](#usage)
+- [Examples](./examples/README.md)
+- [Developer setup](#developer-setup)
+- [Roadmap](#roadmap)
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+# Overview
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+JavaScript SDK is designed to facilitate the development of scalable vector search applications on PostgreSQL databases. With this SDK, you can seamlessly manage various database tables related to documents, text chunks, text splitters, LLM (Language Model) models, and embeddings. By leveraging the SDK's capabilities, you can efficiently index LLM embeddings using PgVector for fast and accurate queries.
 
-## First time developing plugins?
+## Key Features
 
-Quick starting guide for new plugin devs:
+- **Automated Database Management**: With the SDK, you can easily handle the management of database tables related to documents, text chunks, text splitters, LLM models, and embeddings. This automated management system simplifies the process of setting up and maintaining your vector search application's data structure.
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+- **Embedding Generation from Open Source Models**: The JavaScript SDK provides the ability to generate embeddings using hundreds of open source models. These models, trained on vast amounts of data, capture the semantic meaning of text and enable powerful analysis and search capabilities.
 
-## Releasing new releases
+- **Flexible and Scalable Vector Search**: The JavaScript SDK empowers you to build flexible and scalable vector search applications. The JavaScript SDK seamlessly integrates with PgVector, a PostgreSQL extension specifically designed for handling vector-based indexing and querying. By leveraging these indices, you can perform advanced searches, rank results by relevance, and retrieve accurate and meaningful information from your database.
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+## Use Cases
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+Embeddings, the core concept of the JavaScript SDK, find applications in various scenarios, including:
 
-## Adding your plugin to the community plugin list
+- Search: Embeddings are commonly used for search functionalities, where results are ranked by relevance to a query string. By comparing the embeddings of query strings and documents, you can retrieve search results in order of their similarity or relevance.
 
-- Check https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+- Clustering: With embeddings, you can group text strings by similarity, enabling clustering of related data. By measuring the similarity between embeddings, you can identify clusters or groups of text strings that share common characteristics.
 
-## How to use
+- Recommendations: Embeddings play a crucial role in recommendation systems. By identifying items with related text strings based on their embeddings, you can provide personalized recommendations to users.
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+- Anomaly Detection: Anomaly detection involves identifying outliers or anomalies that have little relatedness to the rest of the data. Embeddings can aid in this process by quantifying the similarity between text strings and flagging outliers.
 
-## Manually installing the plugin
+- Classification: Embeddings are utilized in classification tasks, where text strings are classified based on their most similar label. By comparing the embeddings of text strings and labels, you can classify new text strings into predefined categories.
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+## How the JavaScript SDK Works
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+The JavaScript SDK streamlines the development of vector search applications by abstracting away the complexities of database management and indexing. Here's an overview of how the SDK works:
 
-## Funding URL
+- **Automatic Document and Text Chunk Management**: The SDK provides a convenient interface to manage documents and pipelines, automatically handling chunking and embedding for you. You can easily organize and structure your text data within the PostgreSQL database.
 
-You can include funding URLs where people who use your plugin can financially support it.
+- **Open Source Model Integration**: With the SDK, you can seamlessly incorporate a wide range of open source models to generate high-quality embeddings. These models capture the semantic meaning of text and enable powerful analysis and search capabilities.
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+- **Embedding Indexing**: The JavaScript SDK utilizes the PgVector extension to efficiently index the embeddings generated by the open source models. This indexing process optimizes search performance and allows for fast and accurate retrieval of relevant results.
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+- **Querying and Search**: Once the embeddings are indexed, you can perform vector-based searches on the documents and text chunks stored in the PostgreSQL database. The SDK provides intuitive methods for executing queries and retrieving search results.
+
+# Quickstart
+
+Follow the steps below to quickly get started with the JavaScript SDK for building scalable vector search applications on PostgresML databases.
+
+## Prerequisites
+
+Before you begin, make sure you have the following:
+
+- PostgresML Database: Ensure you have a PostgresML database version >=`2.7.7`. You can spin up a database using [Docker](https://github.com/postgresml/postgresml#installation) or [sign up for a free GPU-powered database](https://postgresml.org/signup).
+
+- Set the `DATABASE_URL` environment variable to the connection string of your PostgresML database.
+
+## Installation
+
+To install the JavaScript SDK, use npm:
+
+```
+npm i pgml
 ```
 
-If you have multiple URLs, you can also do:
+## Sample Code
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
+Once you have the JavaScript SDK installed, you can use the following sample code as a starting point for your vector search application:
+
+```javascript
+const pgml = require("pgml");
+
+const main = async () => {
+    const collection = pgml.newCollection("my_javascript_collection");
+```
+
+**Explanation:**
+
+- This code imports `pgml` and creates an instance of the Collection class which we will add pipelines and documents onto
+
+Continuing within `const main`
+
+```javascript
+    const model = pgml.newModel();
+    const splitter = pgml.newSplitter();
+    const pipeline = pgml.newPipeline("my_javascript_pipeline", model, splitter);
+    await collection.add_pipeline(pipeline);
+```
+
+**Explanation**
+
+- The code creates an instance of `Model` and `Splitter` using their default arguments.
+- Finally, the code constructs a pipeline called `"my_javascript_pipeline"` and add it to the collection we Initialized above. This pipeline automatically generates chunks and embeddings for every upserted document.
+
+Continuing with `const main`
+
+```javascript
+    const documents = [
+        {
+          id: "Document One",
+          text: "document one contents...",
+        },
+        {
+          id: "Document Two",
+          text: "document two contents...",
+        },
+    ];
+    await collection.upsert_documents(documents);
+```
+
+**Explanation**
+
+- This code crates and upserts some filler documents. 
+- As mentioned above, the pipeline added earlier automatically runs and generates chunks and embeddings for each document.
+
+Continuing within `const main`
+
+```javascript
+    const queryResults = await collection
+        .query()
+        .vector_recall("Some user query that will match document one first", pipeline)
+        .limit(2)
+        .fetch_all();
+
+    // Convert the results to an array of objects
+    const results = queryResults.map((result) => {
+      const [similarity, text, metadata] = result;
+      return {
+        similarity,
+        text,
+        metadata,
+      };
+    });
+    console.log(results);
+
+    await collection.archive();
+```
+
+**Explanation:**
+
+- The `query` method is called to perform a vector-based search on the collection. The query string is `Some user query that will match document one first`, and the top 2 results are requested.
+- The search results are converted to objects and printed.
+- Finally, the `archive` method is called to archive the collection and free up resources in the PostgresML database.
+
+Call `main` function.
+
+```javascript
+main().then(() => {
+  console.log("Done with PostgresML demo");
+});
+```
+
+**Running the Code**
+
+Open a terminal or command prompt and navigate to the directory where the file is saved.
+
+Execute the following command:
+
+```
+node vector_search.js
+```
+
+You should see the search results printed in the terminal. As you can see, our vector search engine did match document one first.
+
+```javascript
+[
+  {
+    similarity: 0.8506832955692104,
+    text: 'document one contents...',
+    metadata: { id: 'Document One' }
+  },
+  {
+    similarity: 0.8066114609244565,
+    text: 'document two contents...',
+    metadata: { id: 'Document Two' }
+  }
+]
+```
+
+
+# Usage
+
+## High-level Description
+
+The JavaScript SDK provides a set of functionalities to build scalable vector search applications on PostgresQL databases. It enables users to create a collection, which represents a schema in the database, to store tables for documents, chunks, models, splitters, and embeddings. The Collection class in the SDK handles all operations related to these tables, allowing users to interact with the collection and perform various tasks.
+
+## Collections
+
+Collections are the organizational building blocks of the SDK. They manage all documents and related chunks, embeddings, tsvectors, and pipelines.
+
+### Creating Collections
+
+By default, collections will read and write to the database specified by `DATABASE_URL`.
+
+**Create a Collection that uses the default `DATABASE_URL` environment variable.**
+```javascript
+const collection = pgml.newCollection("test_collection")
+```
+
+**Create a Collection that reads from a different database than that set by the environment variable `DATABASE_URL`.**
+```javascript
+const collection = pgml.newCollection("test_collection", CUSTOM_DATABASE_URL)
+```
+
+### Upserting Documents
+
+The `upsert_documents` method can be used to insert new documents and update existing documents.
+
+New documents are dictionaries with two required keys: `id` and `text`. All other keys/value pairs are stored as metadata for the document.
+
+**Upsert new documents with metadata**
+```javascript
+const documents = [
+    {
+        id: "Document 1",
+        text: "Here are the contents of Document 1",
+        random_key: "this will be metadata for the document"
+    },
+    {
+        id: "Document 2",
+        text: "Here are the contents of Document 2",
+        random_key: "this will be metadata for the document"
     }
-}
+]
+const collection = pgml.newCollection("test_collection")
+await collection.upsert_documents(documents)
 ```
 
-## API Documentation
+Document metadata can be updated by upserting the document without the `text` key.
 
-See https://github.com/obsidianmd/obsidian-api
+**Update document metadata**
+```javascript
+documents = [
+    {
+        id: "Document 1",
+        random_key: "this will be NEW metadata for the document"
+    },
+    {
+        id: "Document 2",
+        random_key: "this will be NEW metadata for the document"
+    }
+]
+collection = pgml.newCollection("test_collection")
+await collection.upsert_documents(documents)
+```
+
+### Getting Documents
+
+Documents can be retrieved using the `get_documents` method on the collection object
+
+**Get the first 100 documents**
+```javascript
+collection = pgml.newCollection("test_collection")
+documents = await collection.get_documents({ limit: 100 })
+```
+
+#### Pagination
+
+The JavaScript SDK supports limit-offset pagination and keyset pagination
+
+**Limit-Offset pagination**
+```javascript
+collection = pgml.newCollection("test_collection")
+documents = await collection.get_documents({ limit: 100, offset: 10 })
+```
+
+**Keyset pagination**
+```javascript
+collection = pgml.newCollection("test_collection")
+documents = await collection.get_documents({ limit: 100, last_row_id: 10 })
+```
+
+The `last_row_id` can be taken from the `row_id` field in the returned document's dictionary.
+
+#### Filtering
+
+Metadata and full text filtering are supported just like they are in vector recall.
+
+**Metadata and full text filtering**
+```javascript
+collection = pgml.newCollection("test_collection")
+documents = await collection.get_documents({
+    limit: 100,
+    offset: 10,
+    filter: {
+        metadata: {
+            id: {
+                $eq: 1
+            }
+        },
+        full_text_search: {
+            configuration: "english",
+            text: "Some full text query"
+        }
+    }
+})
+
+```
+
+### Deleting Documents
+
+Documents can be deleted with the `delete_documents` method on the collection object.
+
+Metadata and full text filtering are supported just like they are in vector recall.
+
+```javascript
+collection = pgml.newCollection("test_collection")
+documents = await collection.delete_documents({
+    metadata: {
+        id: {
+            $eq: 1
+        }
+    },
+    full_text_search: {
+        configuration: "english",
+        text: "Some full text query"
+    }
+})
+```
+
+### Searching Collections
+
+The JavaScript SDK is specifically designed to provide powerful, flexible vector search.
+
+Pipelines are required to perform search. See the [Pipelines Section](#pipelines) for more information about using Pipelines.
+
+**Basic vector search**
+```javascript
+const collection = pgml.newCollection("test_collection")
+const pipeline = pgml.newPipeline("test_pipeline")
+const results = await collection.query().vector_recall("Why is PostgresML the best?", pipeline).fetch_all()
+```
+
+**Vector search with custom limit**
+```javascript
+const collection = pgml.newCollection("test_collection")
+const pipeline = pgml.newPipeline("test_pipeline")
+const results = await collection.query().vector_recall("Why is PostgresML the best?", pipeline).limit(10).fetch_all()
+```
+
+#### Metadata Filtering
+
+We provide powerful and flexible arbitrarly nested metadata filtering based off of [MongoDB Comparison Operators](https://www.mongodb.com/docs/manual/reference/operator/query-comparison/). We support each operator mentioned except the `$nin`.
+
+**Vector search with $eq metadata filtering**
+```javascript
+const collection = pgml.newCollection("test_collection")
+const pipeline = pgml.newPipeline("test_pipeline")
+const results = await collection.query()
+    .vector_recall("Here is some query", pipeline)
+    .limit(10)
+    .filter({
+        metadata: {
+            uuid: {
+                $eq: 1
+            }    
+        }
+    })
+    .fetch_all()
+```
+
+The above query would filter out all documents that do not contain a key `uuid` equal to `1`.
+
+**Vector search with $gte metadata filtering**
+```javascript
+const collection = pgml.newCollection("test_collection")
+const pipeline = pgml.newPipeline("test_pipeline")
+const results = await collection.query()
+    .vector_recall("Here is some query", pipeline)
+    .limit(10)
+    .filter({
+        metadata: {
+            index: {
+                $gte: 3
+            }    
+        }
+    })
+    .fetch_all()
+)
+```
+
+The above query would filter out all documents that do not contain a key `index` with a value greater than `3`.
+
+**Vector search with $or and $and metadata filtering**
+```javascript
+const collection = pgml.newCollection("test_collection")
+const pipeline = pgml.newPipeline("test_pipeline")
+const results = await collection.query()
+    .vector_recall("Here is some query", pipeline)
+    .limit(10)
+    .filter({
+        metadata: {
+            $or: [
+                {
+                    $and: [
+                        {
+                            uuid: {
+                                $eq: 1
+                            }    
+                        },
+                        {
+                            index: {
+                                $lt: 100 
+                            }
+                        }
+                    ] 
+                },
+                {
+                   special: {
+                        $ne: true
+                    } 
+                }
+            ]    
+        }
+    })
+    .fetch_all()
+```
+
+The above query would filter out all documents that do not have a key `special` with a value `true` or (have a key `uuid` equal to 1 and a key `index` less than 100).
+
+#### Full Text Filtering
+
+If full text search is enabled for the associated Pipeline, documents can be first filtered by full text search and then recalled by embedding similarity.
+
+```javascript
+const collection = pgml.newCollection("test_collection")
+const pipeline = pgml.newPipeline("test_pipeline")
+const results = await collection.query()
+    .vector_recall("Here is some query", pipeline)
+    .limit(10)
+    .filter({
+        full_text: {
+            configuration: "english",
+            text: "Match Me"
+        }
+    })
+    .fetch_all()
+```
+
+The above query would first filter out all documents that do not match the full text search criteria, and then perform vector recall on the remaining documents.
+
+## Pipelines
+
+Collections can have any number of Pipelines. Each Pipeline is ran everytime documents are upserted.
+
+Pipelines are composed of a Model, Splitter, and additional optional arguments.
+
+### Models
+
+Models are used for embedding chuncked documents. We support most every open source model on [Hugging Face](https://huggingface.co/), and also OpenAI's embedding models.
+
+**Create a default Model "intfloat/e5-small" with default parameters: {}**
+```javascript
+const model = pgml.newModel()
+```
+
+**Create a Model with custom parameters**
+```javascript
+const model = pgml.newModel(
+    "hkunlp/instructor-base",
+    {instruction: "Represent the Wikipedia document for retrieval: "}    
+)
+```
+
+**Use an OpenAI model**
+```javascript
+const model = pgml.newModel("text-embedding-ada-002", "openai")
+```
+
+### Splitters
+
+Splitters are used to split documents into chunks before embedding them. We support splitters found in [LangChain](https://www.langchain.com/).
+
+**Create a default Splitter "recursive_character" with default parameters: {}**
+```javascript
+const splitter = pgml.newSplitter()
+```
+
+**Create a Splitter with custom parameters**
+```javascript
+const splitter = pgml.newSplitter(
+    "recursive_character", 
+    {chunk_size: 1500, chunk_overlap: 40}
+)
+```
+
+### Adding Pipelines to a Collection 
+
+When adding a Pipeline to a collection it is required that Pipeline has a Model and Splitter.
+
+The first time a Pipeline is added to a Collection it will automatically chunk and embed any documents already in that Collection. 
+
+```javascript
+const model = pgml.newModel()
+const splitter = pgml.newSplitter()
+const pipeline = pgml.newPipeline("test_pipeline", model, splitter)
+await collection.add_pipeline(pipeline)
+```
+
+### Enabling full text search
+
+Pipelines can take additional arguments enabling full text search. When full text search is enabled, in addition to automatically chunking and embedding, the Pipeline will create the necessary tsvectors to perform full text search.
+
+For more information on full text search please see: [Postgres Full Text Search](https://www.postgresql.org/docs/15/textsearch.html).
+
+```javascript
+const model = pgml.newModel()
+const splitter = pgml.newSplitter()
+const pipeline = pgml.newPipeline("test_pipeline", model, splitter, {
+    "full_text_search": {
+        active: true,
+        configuration: "english"
+    }
+})
+await collection.add_pipeline(pipeline)
+```
+
+### Configuring HNSW Indexing Parameters
+
+Our SDK utilizes [pgvector](https://github.com/pgvector/pgvector) for storing vectors and performing recall. We use HNSW indexing as it is the most performant mix of performance and recall.
+
+Our SDK allows for configuration of `m` (the maximum number of connections per layer (16 by default)) and `ef_construction` (the size of the dynamic candidate list when constructing the graph (64 by default)) per pipeline.
+
+```javascript
+const model = pgml.newModel()
+const splitter = pgml.newSplitter()
+const pipeline = pgml.newPipeline("test_pipeline", model, splitter, {
+    hnsw: {
+        m: 100,
+        ef_construction: 200
+    }
+})
+await collection.add_pipeline(pipeline)
+```
+
+### Searching with Pipelines
+
+Pipelines are a required argument when performing vector search. After a Pipeline has been added to a Collection, the Model and Splitter can be omitted when instantiating it.
+
+```javascript
+const pipeline = pgml.newPipeline("test_pipeline")
+const collection = pgml.newCollection("test_collection")
+const results = await collection.query().vector_recall("Why is PostgresML the best?", pipeline).fetch_all()
+```
+
+### Enabling, Disabling, and Removing Pipelines
+
+Pipelines can be disabled or removed to prevent them from running automatically when documents are upserted. 
+
+**Disable a Pipeline**
+```javascript
+const pipeline = pgml.newPipeline("test_pipeline")
+const collection = pgml.newCollection("test_collection")
+await collection.disable_pipeline(pipeline)
+```
+
+Disabling a Pipeline prevents it from running automatically, but leaves all chunks and embeddings already created by that Pipeline in the database.
+
+**Enable a Pipeline**
+```javascript
+const pipeline = pgml.newPipeline("test_pipeline")
+const collection = pgml.newCollection("test_collection")
+await collection.enable_pipeline(pipeline)
+```
+
+Enabling a Pipeline will cause it to automatically run and chunk and embed all documents it may have missed while disabled.
+
+**Remove a Pipeline**
+```javascript
+const pipeline = pgml.newPipeline("test_pipeline")
+const collection = pgml.newCollection("test_collection")
+await collection.remove_pipeline(pipeline)
+```
+
+Removing a Pipeline deletes it and all associated data from the database. Removed Pipelines cannot be re-enabled but can be recreated.
+
+## Upgrading
+
+Changes between SDK versions are not necessarily backwards compatible. We provide a migrate function to help transition smoothly.
+
+```javascript
+await pgml.migrate()
+```
+
+This will migrate all collections to be compatible with the latest SDK version.
+
+## Developer Setup
+
+This javascript library is generated from our core rust-sdk. Please check [rust-sdk documentation](../README.md) for developer setup.
+
+## Roadmap
+
+- [x] Enable filters on document metadata in `vector_search`. [Issue](https://github.com/postgresml/postgresml/issues/663)
+- [x] `text_search` functionality on documents using Postgres text search. [Issue](https://github.com/postgresml/postgresml/issues/664)
+- [x] `hybrid_search` functionality that does a combination of `vector_search` and `text_search`. [Issue](https://github.com/postgresml/postgresml/issues/665)
+- [x] Ability to call and manage OpenAI embeddings for comparison purposes. [Issue](https://github.com/postgresml/postgresml/issues/666)
+- [x] Perform chunking on the DB with multiple langchain splitters. [Issue](https://github.com/postgresml/postgresml/issues/668)
+- [ ] Save `vector_search` history for downstream monitoring of model performance. [Issue](https://github.com/postgresml/postgresml/issues/667)

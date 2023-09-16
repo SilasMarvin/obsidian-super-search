@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
+	"id": "obsidian-super-search",
+	"name": "Obsidian Super Search",
+	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "This plugin enables Super Search!",
+	"author": "Silas",
+	"authorUrl": "https://monadmonkey.com",
+	"fundingUrl": "https://monadmonkey.com",
 	"isDesktopOnly": false
 }
