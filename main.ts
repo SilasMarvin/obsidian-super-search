@@ -1,15 +1,15 @@
 import {
 	App,
 	SuggestModal,
-	Modal,
 	Plugin,
 	PluginSettingTab,
 	Setting,
 	TFile,
+	setIcon,
+	loadPdfJs
 } from "obsidian";
 
-const pdfjsLib = require("pdfjs-dist/build/pdf.js");
-const pdfjsLibWorker = require("pdfjs-dist/build/pdf.worker.entry.js")
+const hash = require("hash.js");
 
 // We should be able to import it differently, but I am tired of fighting with esbuild
 import * as pgml from "pgml";
@@ -21,6 +21,11 @@ interface SuperSearchSettings {
 	textEmbedBatchSize: number;
 	pdfConcurrentProcessSize: number;
 	pdfEmbedBatchSize: number;
+	splitterName: string;
+	splitterParameters: string;
+	modelName: string;
+	modelEmbeddingParameters: string;
+	modelSearchParameters: string;
 }
 
 const DEFAULT_SETTINGS: SuperSearchSettings = {
@@ -30,6 +35,13 @@ const DEFAULT_SETTINGS: SuperSearchSettings = {
 	pdfConcurrentProcessSize: 1,
 	textEmbedBatchSize: 10,
 	pdfEmbedBatchSize: 10,
+	splitterName: "recursive_character",
+	splitterParameters: '{"chunk_size": 1500, "chunk_overlap": 40}',
+	modelName: "hkunlp/instructor-xl",
+	modelEmbeddingParameters:
+		'{"instruction": "Represent the Wikipedia document for retrieval: "}',
+	modelSearchParameters:
+		'{"instruction": "Represent the Wikipedia question for retrieving supporting documents: "}',
 };
 
 export default class SuperSearch extends Plugin {
@@ -47,29 +59,6 @@ export default class SuperSearch extends Plugin {
 		this.settings.lastEmbeddedingTime = 0;
 		this.saveSettings();
 
-		// Create the Pipeline
-		const model = pgml.newModel();
-		const splitter = pgml.newSplitter();
-		this.pipeline = pgml.newPipeline(
-			this.app.vault.getName() + "-pipeline",
-			model,
-			splitter,
-		);
-
-		// Create the Collection
-		this.collection = pgml.newCollection(
-			this.app.vault.getName(),
-			"postgres://127.0.0.1:32768/pgml",
-		);
-		this.collection
-			.add_pipeline(this.pipeline)
-			.then(() => {
-				console.log("Pipeline added");
-			})
-			.catch((e: any) => {
-				console.log(`Error adding pipeline ${e.message}`);
-			});
-
 		// Need to figure out how to get the old name from the file
 		// this.app.vault.on("rename", (f: TAbstractFile) => {
 		// 	if (this.settings.excludedDirectories.contains(f.path)) return;
@@ -80,11 +69,11 @@ export default class SuperSearch extends Plugin {
 		// 			metadata: { id: { $eq: file.path } },
 		// 		})
 		// 		.then(() => {
-		// 			console.log(`File deleted: ${file.path}`);
+		// 			console.log(`File deleted: ${ file.path }`);
 		// 		})
 		// 		.catch((e: any) => {
 		// 			console.log(
-		// 				`Error deleting file: ${file.path} - Error: `,
+		// 				`Error deleting file: ${ file.path } - Error: `,
 		// 				e,
 		// 			);
 		// 		});
@@ -92,6 +81,29 @@ export default class SuperSearch extends Plugin {
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		this.statusBarItemEl = this.addStatusBarItem();
+
+		this.app.workspace.on("file-open", (file) => {
+			if(!file) return;
+			const collection = pgml.newCollection(this.app.vault.getName(), this.settings.databaseURL);	
+			collection.get_documents({
+				limit: 1,
+				filter: {
+					metadata: {
+						id: {
+							$eq: file.path
+						}
+					}
+				}
+			}).then((document: any) => {
+				if (document.length > 0 && document[0].created_at >= Math.floor(file.stat.mtime / 1000)) {
+					setIcon(this.statusBarItemEl, "file-check");
+				} else {
+					setIcon(this.statusBarItemEl, "file-x");
+				}
+			}).catch((e: any) => {
+				console.log("Error checking document status", e);
+			});
+		});
 
 		this.addCommand({
 			id: "super-embed",
@@ -133,11 +145,12 @@ export default class SuperSearch extends Plugin {
 			checkCallback: (checking: boolean): boolean | void => {
 				if (!this.settings.databaseURL) return false;
 				if (checking) return true;
-				new SuperSearchModal(
-					this.app,
-					this.collection,
-					this.pipeline,
-				).open();
+				const collection = pgml.newCollection(
+					this.app.vault.getName(),
+					this.settings.databaseURL,
+				);
+				const pipeline = pgml.newPipeline(this.getPipelineName());
+				new SuperSearchModal(this.app, collection, pipeline).open();
 			},
 		});
 
@@ -145,16 +158,64 @@ export default class SuperSearch extends Plugin {
 		this.addSettingTab(new SuperSearchSettingTab(this.app, this));
 	}
 
+	getPipelineName(): string {
+		return hash
+			.sha256()
+			.update(
+				this.settings.modelName +
+					this.settings.modelEmbeddingParameters +
+					this.settings.splitterName +
+					this.settings.splitterParameters,
+			)
+			.digest("hex");
+	}
+
 	async embedFiles(files: TFile[]): Promise<void> {
+		// Create the Pipeline
+		let model;
+		if (this.settings.modelEmbeddingParameters) {
+			model = pgml.newModel(
+				this.settings.modelName,
+				"pgml",
+				JSON.parse(this.settings.modelEmbeddingParameters),
+			);
+		} else {
+			model = pgml.newModel(this.settings.modelName);
+		}
+		let splitter;
+		if (this.settings.splitterParameters) {
+			splitter = pgml.newSplitter(
+				this.settings.splitterName,
+				JSON.parse(this.settings.splitterParameters),
+			);
+		} else {
+			splitter = pgml.newSplitter(this.settings.splitterName);
+		}
+
+		const pipeline = pgml.newPipeline(
+			this.getPipelineName(),
+			model,
+			splitter,
+		);
+
+		// Create the Collection
+		const collection = pgml.newCollection(
+			this.app.vault.getName(),
+			this.settings.databaseURL,
+		);
+
+		// Add the pipeline to the Collection
+		await collection.add_pipeline(pipeline);
+
 		let pdf_files = files.filter((f) => f.extension == "pdf");
 		let text_files = files.filter(
 			(f) => f.extension == "md" || f.extension == "txt",
 		);
-		await this.embedTextFiles(text_files);
-		await this.embedPDFFiles(pdf_files);
+		await this.embedTextFiles(text_files, collection);
+		await this.embedPDFFiles(pdf_files, collection);
 	}
 
-	async embedTextFiles(files: TFile[]): Promise<void> {
+	async embedTextFiles(files: TFile[], collection: any): Promise<void> {
 		for (
 			let i = 0;
 			i < files.length;
@@ -180,11 +241,12 @@ export default class SuperSearch extends Plugin {
 					type: "text",
 				});
 			}
-			await this.collection.upsert_documents(documents);
+			await collection.upsert_documents(documents);
 		}
 	}
 
-	async embedPDFFiles(files: TFile[]): Promise<void> {
+	async embedPDFFiles(files: TFile[], collection: any): Promise<void> {
+		let pdfjsLib = await loadPdfJs();
 		for (
 			let i = 0;
 			i < files.length;
@@ -200,13 +262,13 @@ export default class SuperSearch extends Plugin {
 				);
 				q += 1
 			) {
-				promises.push(this.embedPDFFile(files[q]));
+				promises.push(this.embedPDFFile(files[q], collection, pdfjsLib));
 			}
 			await Promise.all(promises);
 		}
 	}
 
-	async embedPDFFile(file: TFile): Promise<void> {
+	async embedPDFFile(file: TFile, collection: any, pdfjsLib: any): Promise<void> {
 		let buffer = await this.app.vault.readBinary(file);
 		let doc = await pdfjsLib.getDocument({ data: buffer }).promise;
 		let pageIndex = 1;
@@ -236,15 +298,14 @@ export default class SuperSearch extends Plugin {
 			} catch (e) {
 				// If we get an invalid page request, we have reached the end of the pdf
 				if (e.message == "Invalid page request.") {
-					await this.collection.upsert_documents(documents);
+					await collection.upsert_documents(documents);
 					break;
 				} else {
 					throw e;
 				}
 			}
-			console.log(documents);
 			if (documents.length == this.settings.pdfEmbedBatchSize) {
-				await this.collection.upsert_documents(documents);
+				await collection.upsert_documents(documents);
 				documents = [];
 			}
 			pageIndex += 1;
@@ -339,7 +400,7 @@ class SuperSearchModal extends SuggestModal<SearchResult> {
 		el.classList.add("prompt-suggestion-item");
 		el.createEl("div", {
 			cls: "prompt-suggestion-header",
-			text: `${result.path} (${result.score.toFixed(3)})`,
+			text: `${result.path}(${result.score.toFixed(3)})`,
 		});
 		el.createEl("div", {
 			cls: "prompt-suggestion-content",
@@ -401,6 +462,63 @@ class SuperSearchSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					}),
 			);
+
+		[
+			[
+				"splitterName",
+				"Splitter Name",
+				"The splitter to use for splitting documents",
+			],
+			["modelName", "Model Name", "The model to use for embedding"],
+		].forEach(
+			(setting: [keyof typeof this.plugin.settings, string, string]) => {
+				new Setting(containerEl)
+					.setName(setting[1])
+					.setDesc(setting[2])
+					.addText((text) =>
+						text
+							.setValue(<string>this.plugin.settings[setting[0]])
+							// Not really sure what is going on with the typing here
+							.onChange(async (value: never) => {
+								this.plugin.settings[setting[0]] = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+			},
+		);
+
+		[
+			[
+				"splitterParameters",
+				"Splitter Parameters",
+				"Parameters for the splitter",
+			],
+			[
+				"modelEmbeddingParameters",
+				"Model Embedding Parameters",
+				"Parameters used for embedding during embedding",
+			],
+			[
+				"modelSearchParameters",
+				"Model Search Parameters",
+				"Parameters used for embedding during search",
+			],
+		].forEach(
+			(setting: [keyof typeof this.plugin.settings, string, string]) => {
+				new Setting(containerEl)
+					.setName(setting[1])
+					.setDesc(setting[2])
+					.addTextArea((text) =>
+						text
+							.setValue(<string>this.plugin.settings[setting[0]])
+							// Not really sure what is going on with the typing here
+							.onChange(async (value: never) => {
+								this.plugin.settings[setting[0]] = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+			},
+		);
 	}
 }
 
@@ -425,7 +543,7 @@ const removeMarkdown = (text: string): string => {
 	text = text.replace(/!\[([^[\]]+)\]\([^()]+\)/g, "");
 
 	// Remove code blocks (e.g., ```code```)
-	text = text.replace(/`{3}([^`]+)`{3}/g, "");
+	text = text.replace(/`{ 3}([^ `]+)`{ 3} /g, "");
 
 	// Remove inline code (e.g., `code`)
 	text = text.replace(/`([^`]+)`/g, "$1");
